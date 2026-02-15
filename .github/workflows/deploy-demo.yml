@@ -3,8 +3,7 @@ on:
   push:
     branches:
       - '**'
-    branches-ignore:
-      - gh-pages
+      - '!gh-pages'
   workflow_dispatch:
     inputs:
       ref:
