@@ -31,6 +31,7 @@ export const DesktopShortcut: React.FC<DesktopShortcutProps> = ({
     return initialPosition;
   });
 
+  const [tapOpensShortcut, setTapOpensShortcut] = useState(false);
   const [bounds, setBounds] = useState<{ minX: number; minY: number; maxX: number; maxY: number } | undefined>(undefined);
 
   const findDesktopAndUpdateBounds = useCallback(() => {
@@ -62,6 +63,26 @@ export const DesktopShortcut: React.FC<DesktopShortcutProps> = ({
     }
     return () => resizeObserver.disconnect();
   }, [findDesktopAndUpdateBounds]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(hover: none), (pointer: coarse)');
+    const updateTapBehavior = () => {
+      const hasTouchSupport = typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0;
+      setTapOpensShortcut(mediaQuery.matches || hasTouchSupport);
+    };
+
+    updateTapBehavior();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updateTapBehavior);
+      return () => mediaQuery.removeEventListener('change', updateTapBehavior);
+    }
+
+    mediaQuery.addListener(updateTapBehavior);
+    return () => mediaQuery.removeListener(updateTapBehavior);
+  }, []);
 
   const snapToGrid = useCallback(
     (pos: Position): Position => {
@@ -96,6 +117,27 @@ export const DesktopShortcut: React.FC<DesktopShortcutProps> = ({
     bounds,
   });
 
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      onClick?.();
+
+      if (tapOpensShortcut) {
+        onDoubleClick?.();
+      }
+    },
+    [onClick, onDoubleClick, tapOpensShortcut]
+  );
+
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (tapOpensShortcut) return;
+      e.stopPropagation();
+      onDoubleClick?.();
+    },
+    [onDoubleClick, tapOpensShortcut]
+  );
+
   return (
     <ShortcutContainer
       ref={containerRef}
@@ -106,14 +148,8 @@ export const DesktopShortcut: React.FC<DesktopShortcutProps> = ({
         height,
       }}
       onMouseDown={(e) => handleMouseDown(e, position)}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
-      }}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        onDoubleClick?.();
-      }}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
     >
       <ShortcutIcon>{icon ?? '📄'}</ShortcutIcon>
       <ShortcutLabel>{label}</ShortcutLabel>
