@@ -1,0 +1,13 @@
+{
+  "name": "desktop-ui-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w desktop-ui",
+    "build:demo": "npm run build -w desktop-ui-demo",
+    "dev:demo": "npm run dev -w desktop-ui-demo"
+  }
+}
