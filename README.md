@@ -163,3 +163,7 @@ Windows use actual CSS `width` and `height` properties (not transforms), so resp
 ## License
 
 MIT
+
+## Cursor Agent Section
+
+This section was created by a cursor agent.
