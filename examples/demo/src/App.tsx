@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Desktop,
   DesktopShortcut,
@@ -17,43 +17,101 @@ import {
   Button,
   windowsXPTheme,
   windows98Theme,
+  useDesktopPersistence,
 } from 'desktop-ui';
 import { NotepadWindow } from './apps/notepad/NotepadWindow';
 import { MessengerWindow } from './apps/messenger/MessengerWindow';
 import type { FolderTreeItem } from 'desktop-ui';
 import './App.css';
 
-function App() {
-  const [themeName, setThemeName] = useState<'xp' | '98'>('xp');
-  const [windowCount, setWindowCount] = useState(1);
-  const [formWindowOpen, setFormWindowOpen] = useState(false);
-  const [explorerWindowOpen, setExplorerWindowOpen] = useState(false);
-  const [notepadWindowOpen, setNotepadWindowOpen] = useState(false);
-  const [messengerWindowOpen, setMessengerWindowOpen] = useState(false);
+const DEFAULT_SHORTCUT_POSITIONS: Record<string, { x: number; y: number }> = {
+  'shortcut-1': { x: 16, y: 16 },
+  'shortcut-2': { x: 16, y: 80 },
+  'shortcut-3': { x: 96, y: 16 },
+  'shortcut-form': { x: 176, y: 16 },
+  'shortcut-explorer': { x: 256, y: 16 },
+  'shortcut-notepad': { x: 336, y: 16 },
+  'shortcut-messenger': { x: 416, y: 16 },
+};
+
+function AppContent() {
+  const persistence = useDesktopPersistence({ storageKey: 'desktop-ui-demo' });
+  const {
+    shortcutPositions,
+    windowLayouts,
+    openWindows,
+    theme: persistedTheme,
+    saveShortcutPosition,
+    saveWindowLayout,
+    setOpenWindows,
+    setTheme,
+  } = persistence;
+
+  const [themeName, setThemeName] = useState<'xp' | '98'>(() =>
+    (persistedTheme === 'xp' || persistedTheme === '98') ? persistedTheme : 'xp'
+  );
   const [hmrKey, setHmrKey] = useState(0);
-  
-  // Always get fresh theme reference - this ensures we get the latest theme object
+
   const theme = themeName === 'xp' ? windowsXPTheme : windows98Theme;
-  
-  // HMR: Force re-render when theme files update
-  // This ensures theme changes are picked up without manual refresh
+  const genericWindowIds = (openWindows ?? []).filter((id) => /^window-\d+$/.test(id));
+  const formWindowOpen = (openWindows ?? []).includes('form-demo');
+  const explorerWindowOpen = (openWindows ?? []).includes('file-explorer');
+  const notepadWindowOpen = (openWindows ?? []).includes('notepad');
+  const messengerWindowOpen = (openWindows ?? []).includes('messenger');
+
   useEffect(() => {
     if (import.meta.hot) {
-      // Accept updates from desktop-ui (the alias points to packages/desktop-ui/src)
-      // When any file in the library changes, force Desktop to re-render
       import.meta.hot.accept('desktop-ui', () => {
-        setHmrKey(prev => prev + 1);
+        setHmrKey((prev) => prev + 1);
       });
     }
   }, []);
 
+  useEffect(() => {
+    setTheme(themeName);
+  }, [themeName, setTheme]);
+
+  useEffect(() => {
+    if (openWindows.length === 0) {
+      setOpenWindows(['window-1']);
+    }
+  }, []);
+
   const createNewWindow = () => {
-    setWindowCount(prev => prev + 1);
+    const maxNum = genericWindowIds.length > 0
+      ? Math.max(...genericWindowIds.map((id) => parseInt(id.replace('window-', ''), 10)))
+      : 0;
+    setOpenWindows([...openWindows, `window-${maxNum + 1}`]);
+  };
+
+  const openWindow = (id: string) => {
+    if (!openWindows.includes(id)) {
+      setOpenWindows([...openWindows, id]);
+    }
+  };
+
+  const closeWindow = (id: string) => {
+    setOpenWindows(openWindows.filter((x) => x !== id));
   };
 
   const toggleTheme = () => {
-    setThemeName(prev => prev === 'xp' ? '98' : 'xp');
+    setThemeName((prev) => (prev === 'xp' ? '98' : 'xp'));
   };
+
+  const saveAndClose = useCallback(
+    (id: string, state: { position: { x: number; y: number }; size: { width: number; height: number } } | undefined) => {
+      if (state) {
+        saveWindowLayout(id, {
+          x: state.position.x,
+          y: state.position.y,
+          width: state.size.width,
+          height: state.size.height,
+        });
+      }
+      setOpenWindows(openWindows.filter((x) => x !== id));
+    },
+    [saveWindowLayout, setOpenWindows, openWindows]
+  );
 
   return (
     <div>
@@ -62,58 +120,69 @@ function App() {
         id="shortcut-1"
         label="My Computer"
         icon="🖥️"
-        initialPosition={{ x: 16, y: 16 }}
+        initialPosition={shortcutPositions['shortcut-1'] ?? DEFAULT_SHORTCUT_POSITIONS['shortcut-1']}
+        onPositionChange={(pos) => saveShortcutPosition('shortcut-1', pos)}
         onDoubleClick={() => createNewWindow()}
       />
       <DesktopShortcut
         id="shortcut-2"
         label="Recycle Bin"
         icon="🗑️"
-        initialPosition={{ x: 16, y: 80 }}
+        initialPosition={shortcutPositions['shortcut-2'] ?? DEFAULT_SHORTCUT_POSITIONS['shortcut-2']}
+        onPositionChange={(pos) => saveShortcutPosition('shortcut-2', pos)}
         onDoubleClick={() => createNewWindow()}
       />
       <DesktopShortcut
         id="shortcut-3"
         label="Documents"
         icon="📁"
-        initialPosition={{ x: 96, y: 16 }}
+        initialPosition={shortcutPositions['shortcut-3'] ?? DEFAULT_SHORTCUT_POSITIONS['shortcut-3']}
+        onPositionChange={(pos) => saveShortcutPosition('shortcut-3', pos)}
         onDoubleClick={() => createNewWindow()}
       />
       <DesktopShortcut
         id="shortcut-form"
         label="Form Demo"
         icon="📋"
-        initialPosition={{ x: 176, y: 16 }}
-        onDoubleClick={() => setFormWindowOpen(true)}
+        initialPosition={shortcutPositions['shortcut-form'] ?? DEFAULT_SHORTCUT_POSITIONS['shortcut-form']}
+        onPositionChange={(pos) => saveShortcutPosition('shortcut-form', pos)}
+        onDoubleClick={() => openWindow('form-demo')}
       />
       <DesktopShortcut
         id="shortcut-explorer"
         label="File Explorer"
         icon="📂"
-        initialPosition={{ x: 256, y: 16 }}
-        onDoubleClick={() => setExplorerWindowOpen(true)}
+        initialPosition={shortcutPositions['shortcut-explorer'] ?? DEFAULT_SHORTCUT_POSITIONS['shortcut-explorer']}
+        onPositionChange={(pos) => saveShortcutPosition('shortcut-explorer', pos)}
+        onDoubleClick={() => openWindow('file-explorer')}
       />
       <DesktopShortcut
         id="shortcut-notepad"
         label="Notepad"
         icon="📝"
-        initialPosition={{ x: 336, y: 16 }}
-        onDoubleClick={() => setNotepadWindowOpen(true)}
+        initialPosition={shortcutPositions['shortcut-notepad'] ?? DEFAULT_SHORTCUT_POSITIONS['shortcut-notepad']}
+        onPositionChange={(pos) => saveShortcutPosition('shortcut-notepad', pos)}
+        onDoubleClick={() => openWindow('notepad')}
       />
       <DesktopShortcut
         id="shortcut-messenger"
         label="Messenger"
         icon="💬"
-        initialPosition={{ x: 416, y: 16 }}
-        onDoubleClick={() => setMessengerWindowOpen(true)}
+        initialPosition={shortcutPositions['shortcut-messenger'] ?? DEFAULT_SHORTCUT_POSITIONS['shortcut-messenger']}
+        onPositionChange={(pos) => saveShortcutPosition('shortcut-messenger', pos)}
+        onDoubleClick={() => openWindow('messenger')}
       />
-      {Array.from({ length: windowCount }, (_, i) => (
+      {genericWindowIds.map((wid, i) => {
+        const layout = windowLayouts[wid];
+        return (
         <Window
-          key={`window-${i + 1}`}
-          id={`window-${i + 1}`}
+          key={wid}
+          id={wid}
           title={`Window ${i + 1}`}
-          initialPosition={{ x: 100 + i * 50, y: 100 + i * 50 }}
-          initialSize={{ width: 500, height: 400 }}
+          initialPosition={layout ? { x: layout.x, y: layout.y } : { x: 100 + i * 50, y: 100 + i * 50 }}
+          initialSize={layout ? { width: layout.width, height: layout.height } : { width: 500, height: 400 }}
+          onClose={(state) => saveAndClose(wid, state)}
+          onLayoutChange={(l) => saveWindowLayout(wid, { x: l.position.x, y: l.position.y, width: l.size.width, height: l.size.height })}
         >
           <div style={{ padding: '20px' }}>
             <h2>Window {i + 1}</h2>
@@ -141,14 +210,16 @@ function App() {
             </div>
           </div>
         </Window>
-      ))}
+        );
+      })}
       {formWindowOpen && (
         <Window
           id="form-demo"
           title="Form Components Demo"
-          initialPosition={{ x: 150, y: 80 }}
-          initialSize={{ width: 380, height: 480 }}
-          onClose={() => setFormWindowOpen(false)}
+          initialPosition={windowLayouts['form-demo'] ? { x: windowLayouts['form-demo'].x, y: windowLayouts['form-demo'].y } : { x: 150, y: 80 }}
+          initialSize={windowLayouts['form-demo'] ? { width: windowLayouts['form-demo'].width, height: windowLayouts['form-demo'].height } : { width: 380, height: 480 }}
+          onClose={(state) => saveAndClose('form-demo', state)}
+          onLayoutChange={(l) => saveWindowLayout('form-demo', { x: l.position.x, y: l.position.y, width: l.size.width, height: l.size.height })}
         >
           <FormDemo />
         </Window>
@@ -157,18 +228,29 @@ function App() {
         <Window
           id="file-explorer"
           title="File Explorer"
-          initialPosition={{ x: 80, y: 60 }}
-          initialSize={{ width: 520, height: 400 }}
-          onClose={() => setExplorerWindowOpen(false)}
+          initialPosition={windowLayouts['file-explorer'] ? { x: windowLayouts['file-explorer'].x, y: windowLayouts['file-explorer'].y } : { x: 80, y: 60 }}
+          initialSize={windowLayouts['file-explorer'] ? { width: windowLayouts['file-explorer'].width, height: windowLayouts['file-explorer'].height } : { width: 520, height: 400 }}
+          onClose={(state) => saveAndClose('file-explorer', state)}
+          onLayoutChange={(l) => saveWindowLayout('file-explorer', { x: l.position.x, y: l.position.y, width: l.size.width, height: l.size.height })}
         >
           <FileExplorerDemo />
         </Window>
       )}
       {notepadWindowOpen && (
-        <NotepadWindow onClose={() => setNotepadWindowOpen(false)} />
+        <NotepadWindow
+          initialPosition={windowLayouts['notepad'] ? { x: windowLayouts['notepad'].x, y: windowLayouts['notepad'].y } : undefined}
+          initialSize={windowLayouts['notepad'] ? { width: windowLayouts['notepad'].width, height: windowLayouts['notepad'].height } : undefined}
+          onClose={(state) => saveAndClose('notepad', state)}
+          onLayoutChange={(l) => saveWindowLayout('notepad', { x: l.position.x, y: l.position.y, width: l.size.width, height: l.size.height })}
+        />
       )}
       {messengerWindowOpen && (
-        <MessengerWindow onClose={() => setMessengerWindowOpen(false)} />
+        <MessengerWindow
+          initialPosition={windowLayouts['messenger'] ? { x: windowLayouts['messenger'].x, y: windowLayouts['messenger'].y } : undefined}
+          initialSize={windowLayouts['messenger'] ? { width: windowLayouts['messenger'].width, height: windowLayouts['messenger'].height } : undefined}
+          onClose={(state) => saveAndClose('messenger', state)}
+          onLayoutChange={(l) => saveWindowLayout('messenger', { x: l.position.x, y: l.position.y, width: l.size.width, height: l.size.height })}
+        />
       )}
       <Taskbar
         startMenuContent={
@@ -198,23 +280,23 @@ function App() {
             <StartMenuItem
               icon="📋"
               label="Form Demo"
-              onClick={() => setFormWindowOpen(true)}
+              onClick={() => openWindow('form-demo')}
             />
             <StartMenuSubmenu icon="📂" label="Programs">
               <StartMenuItem
                 icon="📂"
                 label="File Explorer"
-                onClick={() => setExplorerWindowOpen(true)}
+                onClick={() => openWindow('file-explorer')}
               />
               <StartMenuItem
                 icon="📝"
                 label="Notepad"
-                onClick={() => setNotepadWindowOpen(true)}
+                onClick={() => openWindow('notepad')}
               />
               <StartMenuItem
                 icon="💬"
                 label="Messenger"
-                onClick={() => setMessengerWindowOpen(true)}
+                onClick={() => openWindow('messenger')}
               />
             </StartMenuSubmenu>
           </>
@@ -466,6 +548,10 @@ function FileExplorerDemo() {
       handleSize={6}
     />
   );
+}
+
+function App() {
+  return <AppContent />;
 }
 
 export default App;

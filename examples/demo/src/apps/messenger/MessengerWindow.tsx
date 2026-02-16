@@ -201,10 +201,13 @@ const StatusDot = styled.span<{ $status: Buddy['status'] }>`
 `;
 
 export interface MessengerWindowProps {
-  onClose?: () => void;
+  initialPosition?: { x: number; y: number };
+  initialSize?: { width: number; height: number };
+  onClose?: (state?: { position: { x: number; y: number }; size: { width: number; height: number } }) => void;
+  onLayoutChange?: (layout: { position: { x: number; y: number }; size: { width: number; height: number } }) => void;
 }
 
-export function MessengerWindow({ onClose }: MessengerWindowProps) {
+export function MessengerWindow({ initialPosition, initialSize, onClose, onLayoutChange }: MessengerWindowProps) {
   const theme = useTheme();
   const {
     meId,
@@ -245,9 +248,10 @@ export function MessengerWindow({ onClose }: MessengerWindowProps) {
     <Window
       id="messenger"
       title="Windows Messenger"
-      initialPosition={{ x: 120, y: 100 }}
-      initialSize={{ width: 480, height: 420 }}
+      initialPosition={initialPosition ?? { x: 120, y: 100 }}
+      initialSize={initialSize ?? { width: 480, height: 420 }}
       onClose={onClose}
+      onLayoutChange={onLayoutChange}
     >
       <Layout>
         <ResizableSplitPane

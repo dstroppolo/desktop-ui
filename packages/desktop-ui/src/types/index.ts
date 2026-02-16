@@ -254,7 +254,10 @@ export interface WindowProps {
   initialSize?: Size;
   /** Called before closing; return false to prevent close (e.g. for unsaved changes) */
   onBeforeClose?: () => boolean;
-  onClose?: () => void;
+  /** Called when closing. Receives window state (position, size) for persistence before the window is removed. */
+  onClose?: (windowState?: Pick<WindowState, 'position' | 'size'>) => void;
+  /** Called when window position or size changes (debounced). Use for persistence. */
+  onLayoutChange?: (layout: { position: Position; size: Size }) => void;
   children?: React.ReactNode;
 }
 

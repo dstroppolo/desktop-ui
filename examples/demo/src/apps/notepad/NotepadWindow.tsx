@@ -37,14 +37,17 @@ const HiddenFileInput = styled.input`
 
 export interface NotepadWindowProps {
   id?: string;
-  onClose?: () => void;
+  initialPosition?: { x: number; y: number };
+  initialSize?: { width: number; height: number };
+  onClose?: (state?: { position: { x: number; y: number }; size: { width: number; height: number } }) => void;
+  onLayoutChange?: (layout: { position: { x: number; y: number }; size: { width: number; height: number } }) => void;
 }
 
 export interface NotepadWindowRef {
   isDirty: boolean;
 }
 
-export const NotepadWindow = forwardRef<NotepadWindowRef, NotepadWindowProps>(({ id = 'notepad', onClose }, ref) => {
+export const NotepadWindow = forwardRef<NotepadWindowRef, NotepadWindowProps>(({ id = 'notepad', initialPosition, initialSize, onClose, onLayoutChange }, ref) => {
   const [text, setText] = useState('');
   const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
   const [wordWrap, setWordWrap] = useState(true);
@@ -228,10 +231,6 @@ export const NotepadWindow = forwardRef<NotepadWindowRef, NotepadWindowProps>(({
 
   const windowTitle = `${fileName}${isDirty ? ' *' : ''} - Notepad`;
 
-  const handleWindowClose = useCallback(() => {
-    onClose?.();
-  }, [onClose]);
-
   const handleBeforeClose = useCallback(() => {
     if (isDirty && !window.confirm('Save changes before closing?')) return false;
     return true;
@@ -241,10 +240,11 @@ export const NotepadWindow = forwardRef<NotepadWindowRef, NotepadWindowProps>(({
     <Window
       id={id}
       title={windowTitle}
-      initialPosition={{ x: 100, y: 80 }}
-      initialSize={{ width: 600, height: 450 }}
+      initialPosition={initialPosition ?? { x: 100, y: 80 }}
+      initialSize={initialSize ?? { width: 600, height: 450 }}
       onBeforeClose={handleBeforeClose}
-      onClose={handleWindowClose}
+      onClose={onClose}
+      onLayoutChange={onLayoutChange}
     >
       <Layout onKeyDown={handleKeyDown} tabIndex={0}>
       <HiddenFileInput

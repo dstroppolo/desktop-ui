@@ -11,6 +11,8 @@ import {
 } from './Window.styles';
 import { WindowHeader } from './WindowHeader';
 
+const LAYOUT_DEBOUNCE_MS = 300;
+
 export const Window: React.FC<WindowProps> = ({
   id,
   title,
@@ -18,6 +20,7 @@ export const Window: React.FC<WindowProps> = ({
   initialSize,
   onBeforeClose,
   onClose,
+  onLayoutChange,
   children,
 }) => {
   const windowManager = useWindowManager();
@@ -35,6 +38,21 @@ export const Window: React.FC<WindowProps> = ({
   }, [id, title]); // Only run on mount/unmount
 
   const windowState = windowManager.getWindow(id);
+
+  useEffect(() => {
+    if (!onLayoutChange || !windowState || windowState.maximized) return;
+    const { position, size } = windowState;
+    const timeoutId = setTimeout(() => {
+      onLayoutChange({ position, size });
+    }, LAYOUT_DEBOUNCE_MS);
+    return () => clearTimeout(timeoutId);
+  }, [
+    onLayoutChange,
+    windowState?.position.x,
+    windowState?.position.y,
+    windowState?.size.width,
+    windowState?.size.height,
+  ]);
 
   useEffect(() => {
     // Find desktop container for bounds
@@ -95,8 +113,9 @@ export const Window: React.FC<WindowProps> = ({
 
   const handleClose = () => {
     if (onBeforeClose && !onBeforeClose()) return;
+    const state = windowManager.getWindow(id);
+    onClose?.(state ? { position: state.position, size: state.size } : undefined);
     windowManager.closeWindow(id);
-    onClose?.();
   };
 
   const handleMinimize = () => {

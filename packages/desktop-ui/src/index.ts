@@ -19,6 +19,7 @@ export { ResizableSplitPane } from './components/ResizableSplitPane/ResizableSpl
 // Context and Hooks
 export { ThemeProvider, useDesktop, useTheme } from './context/DesktopContext';
 export { useWindowManager } from './hooks/useWindowManager';
+export { useDesktopPersistence, localStorageAdapter } from './persistence';
 export { useDraggable } from './hooks/useDraggable';
 export { useResizable } from './hooks/useResizable';
 
@@ -48,3 +49,10 @@ export type {
   FolderTreeProps,
   ResizableSplitPaneProps,
 } from './types';
+export type {
+  DesktopLayout,
+  DesktopStorageAdapter,
+  Viewport,
+  ShortcutLayout,
+  WindowLayout,
+} from './persistence';
