@@ -85,7 +85,10 @@ export const Window: React.FC<WindowProps> = ({
   };
 
   // Hooks must be called before any early returns to maintain idempotency
-  const { handleMouseDown: handleDragStart } = useDraggable({
+  const {
+    handleMouseDown: handleDragStart,
+    handleTouchStart: handleDragTouchStart,
+  } = useDraggable({
     onDrag: (position) => {
       windowManager.updateWindowPosition(id, position);
     },
@@ -160,6 +163,23 @@ export const Window: React.FC<WindowProps> = ({
     handleDragStart(e, actualPosition);
   };
 
+  const handleHeaderTouchStart = (e: React.TouchEvent) => {
+    handleFocus();
+    // Don't allow dragging when maximized
+    if (windowState.maximized) return;
+    // Get the actual rendered position from the DOM element
+    let actualPosition = windowState.position;
+    if (windowRef.current && desktopRef.current) {
+      const windowRect = windowRef.current.getBoundingClientRect();
+      const desktopRect = desktopRef.current.getBoundingClientRect();
+      actualPosition = {
+        x: windowRect.left - desktopRect.left,
+        y: windowRect.top - desktopRect.top,
+      };
+    }
+    handleDragTouchStart(e, actualPosition);
+  };
+
   if (windowState.minimized) {
     return null;
   }
@@ -186,6 +206,7 @@ export const Window: React.FC<WindowProps> = ({
         onMaximize={handleMaximize}
         onClose={handleClose}
         onMouseDown={handleHeaderMouseDown}
+        onTouchStart={handleHeaderTouchStart}
       />
       <WindowContent $theme={theme}>
         {children}

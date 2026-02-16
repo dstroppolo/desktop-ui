@@ -281,7 +281,7 @@ export interface DesktopShortcutProps {
   initialPosition?: Position;
   /** Called when shortcut is single-clicked */
   onClick?: () => void;
-  /** Called when shortcut is double-clicked */
+  /** Called when shortcut is double-clicked (single tap on touch/coarse-pointer devices) */
   onDoubleClick?: () => void;
   /** Width of the shortcut in pixels. Default: 64 */
   width?: number;
