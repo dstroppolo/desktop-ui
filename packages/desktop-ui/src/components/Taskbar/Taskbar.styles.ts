@@ -23,6 +23,38 @@ export const TaskbarContainer = styled.div<TaskbarContainerProps>`
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 `;
 
+export const TaskbarItemsContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+`;
+
+interface TaskbarClockProps {
+  $theme: Theme;
+}
+
+export const TaskbarClock = styled.div<TaskbarClockProps>`
+  margin-left: auto;
+  margin-right: 6px;
+  padding: 0 10px;
+  min-width: 72px;
+  height: calc(${(props) => props.$theme.taskbar.height} - 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${(props) => props.$theme.taskbar.item.textColor};
+  font-size: ${(props) => props.$theme.taskbar.item.fontSize};
+  white-space: nowrap;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+`;
+
 interface StartButtonProps {
   $theme: Theme;
 }
