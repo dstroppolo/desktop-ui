@@ -17,6 +17,7 @@ interface WindowHeaderProps {
   onMaximize: () => void;
   onClose: () => void;
   onMouseDown: (e: React.MouseEvent) => void;
+  onTouchStart: (e: React.TouchEvent) => void;
 }
 
 export const WindowHeader: React.FC<WindowHeaderProps> = ({
@@ -26,16 +27,30 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
   onMaximize,
   onClose,
   onMouseDown,
+  onTouchStart,
 }) => {
   const theme = useTheme();
+  const handleButtonMouseDown: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+    e.stopPropagation();
+  };
+  const handleButtonTouchStart: React.TouchEventHandler<HTMLButtonElement> = (e) => {
+    e.stopPropagation();
+  };
 
   return (
-    <StyledHeader $theme={theme} $maximized={maximized} onMouseDown={onMouseDown}>
+    <StyledHeader
+      $theme={theme}
+      $maximized={maximized}
+      onMouseDown={onMouseDown}
+      onTouchStart={onTouchStart}
+    >
       <WindowTitle $theme={theme}>{title}</WindowTitle>
       <WindowButtons>
         <WindowButton
           $theme={theme}
           $type="minimize"
+          onMouseDown={handleButtonMouseDown}
+          onTouchStart={handleButtonTouchStart}
           onClick={(e) => {
             e.stopPropagation();
             onMinimize();
@@ -47,6 +62,8 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
         <WindowButton
           $theme={theme}
           $type="maximize"
+          onMouseDown={handleButtonMouseDown}
+          onTouchStart={handleButtonTouchStart}
           onClick={(e) => {
             e.stopPropagation();
             onMaximize();
@@ -58,6 +75,8 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
         <WindowButton
           $theme={theme}
           $type="close"
+          onMouseDown={handleButtonMouseDown}
+          onTouchStart={handleButtonTouchStart}
           onClick={(e) => {
             e.stopPropagation();
             onClose();
