@@ -1,7 +1,9 @@
 name: Deploy Demo
 on:
   push:
-    branches: [main]
+    branches-ignore:
+      - gh-pages
+  workflow_dispatch:
 jobs:
   deploy:
     runs-on: ubuntu-latest
