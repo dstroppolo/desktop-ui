@@ -47,6 +47,7 @@ export const WindowHeader = styled.div<WindowHeaderProps>`
   border-radius: ${props => props.$maximized ? 0 : '6px 6px 0 0'};
   /* Subtle inner highlight at top of title bar */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  touch-action: none;
 `;
 
 interface WindowTitleProps {
