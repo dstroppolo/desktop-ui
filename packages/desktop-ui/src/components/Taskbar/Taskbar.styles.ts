@@ -38,10 +38,9 @@ interface TaskbarClockProps {
 
 export const TaskbarClock = styled.div<TaskbarClockProps>`
   margin-left: auto;
-  margin-right: 6px;
   padding: 0 10px;
   min-width: 72px;
-  height: calc(${(props) => props.$theme.taskbar.height} - 8px);
+  height: calc(${(props) => props.$theme.taskbar.height});
   display: flex;
   align-items: center;
   justify-content: center;
