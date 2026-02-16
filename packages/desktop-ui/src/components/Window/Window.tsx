@@ -3,6 +3,7 @@ import { WindowProps } from '../../types';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useDraggable } from '../../hooks/useDraggable';
 import { useResizable } from '../../hooks/useResizable';
+import { usePinchResize } from '../../hooks/usePinchResize';
 import { useTheme } from '../../context/DesktopContext';
 import {
   WindowContainer,
@@ -104,6 +105,21 @@ export const Window: React.FC<WindowProps> = ({
     minWidth: 150,
     minHeight: 100,
     bounds: getBounds(),
+  });
+
+  const { contentRef: pinchContentRef } = usePinchResize({
+    onResize: (size, position) => {
+      windowManager.updateWindowSize(id, size);
+      windowManager.updateWindowPosition(id, position);
+    },
+    getLayout: () => ({
+      size: windowState?.size ?? { width: 400, height: 300 },
+      position: windowState?.position ?? { x: 100, y: 100 },
+    }),
+    minWidth: 150,
+    minHeight: 100,
+    bounds: getBounds(),
+    enabled: !!windowState && !windowState.maximized && !windowState.minimized,
   });
 
   if (!windowState) {
@@ -208,7 +224,7 @@ export const Window: React.FC<WindowProps> = ({
         onMouseDown={handleHeaderMouseDown}
         onTouchStart={handleHeaderTouchStart}
       />
-      <WindowContent $theme={theme}>
+      <WindowContent ref={pinchContentRef} $theme={theme}>
         {children}
       </WindowContent>
       {!windowState.maximized && resizeHandles.map((handle) => (

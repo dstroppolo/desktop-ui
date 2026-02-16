@@ -22,6 +22,7 @@ export { useWindowManager } from './hooks/useWindowManager';
 export { useDesktopPersistence, localStorageAdapter } from './persistence';
 export { useDraggable } from './hooks/useDraggable';
 export { useResizable } from './hooks/useResizable';
+export { usePinchResize } from './hooks/usePinchResize';
 
 // Themes
 export { windowsXPTheme, windows98Theme, baseTheme } from './themes';
