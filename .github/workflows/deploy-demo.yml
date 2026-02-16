@@ -1,18 +1,32 @@
 name: Deploy Demo
 on:
   push:
-    branches-ignore:
-      - gh-pages
+    branches:
+      - '**'
+      - '!gh-pages'
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag, or SHA to deploy (defaults to triggering ref)
+        required: false
+        type: string
+concurrency:
+  group: deploy-demo-gh-pages
+  cancel-in-progress: true
 jobs:
   deploy:
+    if: github.ref_name != 'gh-pages'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pages: write
       id-token: write
+    env:
+      DEPLOY_REF: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEPLOY_REF }}
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
