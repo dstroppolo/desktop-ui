@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button, Window, useTheme } from 'desktop-ui';
 import type { Theme } from 'desktop-ui';
 import styled from 'styled-components';
