@@ -21,6 +21,7 @@ import {
 } from 'desktop-ui';
 import { NotepadWindow } from './apps/notepad/NotepadWindow';
 import { MessengerWindow } from './apps/messenger/MessengerWindow';
+import { CalculatorWindow } from './apps/calculator/CalculatorWindow';
 import type { FolderTreeItem } from 'desktop-ui';
 import './App.css';
 
@@ -32,6 +33,7 @@ const DEFAULT_SHORTCUT_POSITIONS: Record<string, { x: number; y: number }> = {
   'shortcut-explorer': { x: 256, y: 16 },
   'shortcut-notepad': { x: 336, y: 16 },
   'shortcut-messenger': { x: 416, y: 16 },
+  'shortcut-calculator': { x: 496, y: 16 },
 };
 
 function AppContent() {
@@ -58,6 +60,7 @@ function AppContent() {
   const explorerWindowOpen = (openWindows ?? []).includes('file-explorer');
   const notepadWindowOpen = (openWindows ?? []).includes('notepad');
   const messengerWindowOpen = (openWindows ?? []).includes('messenger');
+  const calculatorWindowOpen = (openWindows ?? []).includes('calculator');
 
   useEffect(() => {
     if (import.meta.hot) {
@@ -172,6 +175,14 @@ function AppContent() {
         onPositionChange={(pos) => saveShortcutPosition('shortcut-messenger', pos)}
         onDoubleClick={() => openWindow('messenger')}
       />
+      <DesktopShortcut
+        id="shortcut-calculator"
+        label="Calculator"
+        icon="🧮"
+        initialPosition={shortcutPositions['shortcut-calculator'] ?? DEFAULT_SHORTCUT_POSITIONS['shortcut-calculator']}
+        onPositionChange={(pos) => saveShortcutPosition('shortcut-calculator', pos)}
+        onDoubleClick={() => openWindow('calculator')}
+      />
       {genericWindowIds.map((wid, i) => {
         const layout = windowLayouts[wid];
         return (
@@ -252,6 +263,14 @@ function AppContent() {
           onLayoutChange={(l) => saveWindowLayout('messenger', { x: l.position.x, y: l.position.y, width: l.size.width, height: l.size.height })}
         />
       )}
+      {calculatorWindowOpen && (
+        <CalculatorWindow
+          initialPosition={windowLayouts['calculator'] ? { x: windowLayouts['calculator'].x, y: windowLayouts['calculator'].y } : undefined}
+          initialSize={windowLayouts['calculator'] ? { width: windowLayouts['calculator'].width, height: windowLayouts['calculator'].height } : undefined}
+          onClose={(state) => saveAndClose('calculator', state)}
+          onLayoutChange={(l) => saveWindowLayout('calculator', { x: l.position.x, y: l.position.y, width: l.size.width, height: l.size.height })}
+        />
+      )}
       <Taskbar
         startMenuContent={
           <>
@@ -297,6 +316,11 @@ function AppContent() {
                 icon="💬"
                 label="Messenger"
                 onClick={() => openWindow('messenger')}
+              />
+              <StartMenuItem
+                icon="🧮"
+                label="Calculator"
+                onClick={() => openWindow('calculator')}
               />
             </StartMenuSubmenu>
           </>
