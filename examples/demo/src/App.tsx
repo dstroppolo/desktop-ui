@@ -16,6 +16,7 @@ import {
   RadioGroup,
   Button,
   windowsXPTheme,
+  windowsVistaTheme,
   windows98Theme,
   useDesktopPersistence,
 } from 'desktop-ui';
@@ -34,6 +35,15 @@ const DEFAULT_SHORTCUT_POSITIONS: Record<string, { x: number; y: number }> = {
   'shortcut-messenger': { x: 416, y: 16 },
 };
 
+type ThemeName = 'xp' | 'vista' | '98';
+
+const THEME_ORDER: ThemeName[] = ['xp', 'vista', '98'];
+const THEME_LABELS: Record<ThemeName, string> = {
+  xp: 'XP',
+  vista: 'Vista',
+  '98': '98',
+};
+
 function AppContent() {
   const persistence = useDesktopPersistence({ storageKey: 'desktop-ui-demo' });
   const {
@@ -47,12 +57,19 @@ function AppContent() {
     setTheme,
   } = persistence;
 
-  const [themeName, setThemeName] = useState<'xp' | '98'>(() =>
-    (persistedTheme === 'xp' || persistedTheme === '98') ? persistedTheme : 'xp'
+  const [themeName, setThemeName] = useState<ThemeName>(() =>
+    persistedTheme === 'xp' || persistedTheme === 'vista' || persistedTheme === '98'
+      ? persistedTheme
+      : 'xp'
   );
   const [hmrKey, setHmrKey] = useState(0);
 
-  const theme = themeName === 'xp' ? windowsXPTheme : windows98Theme;
+  const theme =
+    themeName === 'xp'
+      ? windowsXPTheme
+      : themeName === 'vista'
+        ? windowsVistaTheme
+        : windows98Theme;
   const genericWindowIds = (openWindows ?? []).filter((id) => /^window-\d+$/.test(id));
   const formWindowOpen = (openWindows ?? []).includes('form-demo');
   const explorerWindowOpen = (openWindows ?? []).includes('file-explorer');
@@ -95,7 +112,11 @@ function AppContent() {
   };
 
   const toggleTheme = () => {
-    setThemeName((prev) => (prev === 'xp' ? '98' : 'xp'));
+    setThemeName((prev) => {
+      const currentIndex = THEME_ORDER.indexOf(prev);
+      const nextIndex = (currentIndex + 1) % THEME_ORDER.length;
+      return THEME_ORDER[nextIndex];
+    });
   };
 
   const saveAndClose = useCallback(
@@ -340,7 +361,7 @@ function AppContent() {
             fontWeight: 'bold'
           }}
         >
-          Switch Theme ({themeName === 'xp' ? 'XP' : '98'})
+          Switch Theme ({THEME_LABELS[themeName]})
         </button>
       </div>
     </div>
