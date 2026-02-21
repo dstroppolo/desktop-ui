@@ -25,7 +25,7 @@ export { useResizable } from './hooks/useResizable';
 export { usePinchResize } from './hooks/usePinchResize';
 
 // Themes
-export { windowsXPTheme, windows98Theme, baseTheme } from './themes';
+export { windowsXPTheme, windowsVistaTheme, windows98Theme, baseTheme } from './themes';
 
 // Types
 export type {

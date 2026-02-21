@@ -88,6 +88,7 @@ The library includes built-in themes and supports easy theme switching.
 ### Available Themes
 
 - `windowsXPTheme` - Windows XP style (default)
+- `windowsVistaTheme` - Windows Vista style (Aero-inspired)
 - `windows98Theme` - Windows 98 style
 - `baseTheme` - Base theme template
 
